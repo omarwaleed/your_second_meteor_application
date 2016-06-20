@@ -146,7 +146,12 @@ if(Meteor.isClient){
 	        	}
 	        	else
 	        	{
-	        		Router.go('home');
+                    // redirects to the same route you used to be on
+                    // if the Router.go wasn't given
+                    var currentRoute = Router.current().route.getName();
+                    if (currentRoute == "login") {
+	        		    Router.go('home');
+                    }
 	        	}
 	        });
 	    }
@@ -171,6 +176,33 @@ Router.route('/list/:_id', {
 	template: 'listPage',
 	data: function () {
 		var currentList = this.params._id;
-		return Lists.findOne({_id: currentList});
-	}
+        var currentUser = Meteor.userId();
+		return Lists.findOne({_id: currentList, createdBy: currentUser});
+	},
+    onRun: function(){
+        console.log("You triggered 'onRun' for 'listPage' route.");
+        this.next();
+    },
+    onRerun: function(){
+        console.log("You triggered 'onRerun' for 'listPage' route.");
+    },
+    onBeforeAction: function() {
+        var currentUser = Meteor.userId();
+        if (currentUser) {
+            // continues the route normally
+            // if this function is called without a this.next
+            // the route gets stuck
+            this.next();
+        }
+        else {
+            // render template instead
+            this.render('login');
+        }
+    },
+    onAfterAction: function(){
+        console.log("You triggered 'onAfterAction' for 'listPage' route.");
+    },
+    onStop: function(){
+        console.log("You triggered 'onStop' for 'listPage' route.");
+    }
 });
